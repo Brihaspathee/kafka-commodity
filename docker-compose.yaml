@@ -1,0 +1,83 @@
+version: '3.8'
+
+# docker run command
+
+# kafka-order
+# docker container run -p 8081:8081 --net kafka-net -e SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092 vbalaji215/kafka-consumer:0.0.1-SNAPSHOT
+
+# PRODUCER
+# docker container run -p 8082:8082 --net kafka-net -e SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092 vbalaji215/kafka-producer:0.0.1-SNAPSHOT
+
+services:
+  kafka-order:
+    image: vbalaji215/kafka-order:0.0.1-SNAPSHOT
+    container_name: kafka-order
+    networks:
+      - kafka-net
+    volumes:
+      - /Users/logs/kafka/commodity/kafka-order:/logs/local
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+  kafka-pattern:
+    image: vbalaji215/kafka-pattern:0.0.1-SNAPSHOT
+    container_name: kafka-pattern
+    networks:
+      - kafka-net
+    volumes:
+      - /Users/logs/kafka/commodity/kafka-pattern:/logs/local
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - kafka-order
+  kafka-reward:
+    image: vbalaji215/kafka-reward:0.0.1-SNAPSHOT
+    container_name: kafka-reward
+    networks:
+      - kafka-net
+    volumes:
+      - /Users/logs/kafka/commodity/kafka-reward:/logs/local
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - kafka-order
+      - kafka-pattern
+  kafka-storage:
+    image: vbalaji215/kafka-storage:0.0.1-SNAPSHOT
+    container_name: kafka-storage
+    networks:
+      - kafka-net
+    volumes:
+      - /Users/logs/kafka/commodity/kafka-storage:/logs/local
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - kafka-order
+      - kafka-pattern
+      - kafka-reward
+
+#volumes:
+#  kafka-consumer-vol:
+#    driver: local
+#    driver_opts:
+#      type: none
+#      o: bind
+#      device: /Users/logs/kafka/consumer
+#  kafka-producer-vol:
+#    driver: local
+#    driver_opts:
+#      type: none
+#      o: bind
+#      device: /Users/logs/kafka/producer
+
+networks:
+  kafka-net:
+    name: kafka-net
+    driver: bridge
